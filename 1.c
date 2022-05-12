@@ -2,115 +2,111 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
-#define MaxSize 100
-typedef struct node {
-    char data;
-    struct node *lchild;
-    struct node *rchild;
-} BTNode;
+#define  MAXV 6
+#define  MAXA 100
+#define  INF 25535
+typedef struct ANode {
+    int adjvex;
+    struct ANode *nextarc;
+    int weight;
+} ArcNode;
+typedef struct Vnode {
+    int info;
+    ArcNode *firstarc;
+} VNode;
+typedef struct {
+    VNode adjlist[MAXV];
+    int n, e;
+} AdjGraph;
 
-
-void CreatBTree(BTNode **b, char *str) {
-    BTNode *St[MaxSize], *p;
-    int top = -1;
-    int k;
-    int j = 0;
-    char ch;
-    (*b) = NULL;
-    ch = str[j];
-    while (ch != 0) {
-        switch (ch) {
-            case '(':
-                top++;
-                St[top] = p;
-                k = 1;
-                break;
-            case ')':
-                top--;
-                break;
-            case ',':
-                k = 2;
-                break;
-            default:
-                p = malloc(sizeof(BTNode));
-                p->data = ch;
-                p->lchild = p->rchild = NULL;
-                if ((*b) == NULL) {
-                    (*b) = p;
-                } else {
-                    switch (k) {
-                        case 1:
-                            St[top]->lchild = p;
-                            break;
-                        case 2:
-                            St[top]->rchild = p;
-                            break;
-                    }
-                }
-        }
-        j++;
-        ch = str[j];
+void createAdj1(AdjGraph **G, int A[MAXV][MAXV], int n, int e) {
+    int i, j;
+    ArcNode *p;
+    (*G) = malloc(sizeof(AdjGraph));
+    for (i = 0; i < n; ++i) {
+        (*G)->adjlist[i].firstarc = NULL;
     }
-}
-
-void DispBTree(BTNode *b) {
-    if (b != NULL) {
-        printf("%c", b->data);
-        if (b->lchild != NULL || b->rchild != NULL) {
-            printf("(");
-            DispBTree(b->lchild);
-            if (b->rchild != NULL) {
-                printf(",");
+    for (i = 0; i < n; ++i) {
+        for (int j = n - 1; j >= 0; j--) {
+            if (A[i][j] != 0 && A[i][j] != INF) {
+                p = malloc(sizeof(ArcNode));
+                p->adjvex = j;
+                p->nextarc = (*G)->adjlist[i].firstarc;
+                p->weight = A[i][j];
+                (*G)->adjlist[i].firstarc = p;
             }
-            DispBTree(b->rchild);
-            printf(")");
         }
     }
+    (*G)->n = n;
+    (*G)->e = e;
 }
 
-void DispChild(BTNode *b, char e) {
-    if (b == NULL) {
-        return;
-    }
-    if (b->data == e) {
-        printf("\nlchild:%c ", b->lchild->data);
-        printf("rchild:%c ", b->rchild->data);
-        return;
-    } else {
-        DispChild(b->lchild, e);
-        DispChild(b->rchild, e);
+void DispAdj(AdjGraph *G) {
+    int i;
+    ArcNode *p;
+    for (i = 0; i < G->n; ++i) {
+        p = G->adjlist[i].firstarc;
+        printf("%3d: ", i);
+        while (p != NULL) {
+            printf("%3d[%d]->", p->adjvex, p->weight);
+            p = p->nextarc;
+        }
+        printf("/\\");
+        printf("\n");
     }
 }
 
-int height(BTNode *b) {
-    if (b == NULL) {
-        return 0;
+void DestroyAdj(AdjGraph **G) {
+    int i;
+    ArcNode *pre;
+    ArcNode *p;
+    for (i = 0; i < (*G)->n; ++i) {
+        pre = (*G)->adjlist[i].firstarc;
+        while (pre != NULL) {
+            p = pre;
+            pre = pre->nextarc;
+            free(p);
+        }
     }
-    int lHeight = height(b->lchild);
-    int rHeight = height(b->rchild);
-    return lHeight > rHeight ? lHeight + 1 : rHeight + 1;
+    free((*G));
 }
 
-void DestroyTree(BTNode *b) {
-    if (b == NULL) {
-        return;
+void createAdj2() {
+
+}
+
+void DispAdj2(int A[MAXV][MAXV], int n) {
+    printf("%3d ", n);
+    for (int i = 0; i < n; i++) {
+        printf("%3d ", i);
     }
-    DestroyTree(b->lchild);
-    DestroyTree(b->rchild);
-    free(b);
+    printf("\n");
+    for (int i = 0; i < n; i++) {
+        printf("%3d ", i);
+        for (int j = 0; j < n; ++j) {
+            if (A[i][j] != INF)
+                printf("%3d ", A[i][j]);
+            else
+                printf("INF ");
+        }
+        printf("\n");
+    }
 }
 
 int main() {
-    char *str = "A(B(D,E(H(J,K(L,M(,N))))),C(F,G(,I)))";
-    BTNode *b = malloc(sizeof(BTNode));
-    CreatBTree(&b, str);
-    DispBTree(b);
-    DispChild(b, 'H');
-    printf("\nHeight is %d", height(b));
-    DestroyTree(b);
-    int a;
+    int A[MAXV][MAXV] = {
+            {0,   5,   INF, 7,   INF, 3},
+            {INF, 0,   4,   INF, INF, INF},
+            {8,   INF, 0,   INF, INF, 9},
+            {INF, INF, 5,   0,   INF, 6},
+            {INF, INF, INF, 5,   0,   INF,},
+            {3,   INF, INF, INF, 1,   0}
+    };
+    DispAdj2(A, 6);
+    printf("\n");
+    AdjGraph *G = malloc(sizeof(AdjGraph));
+    createAdj1(&G, A, 6, 11);
+    DispAdj(G);
+    DestroyAdj(G);
 }
-
-
